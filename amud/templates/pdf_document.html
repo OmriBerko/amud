@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <title>{{ title }} {{ number_display }}</title>
+  <style>
+    {{ font_css|safe }}
+    @page { size: A4; margin: 14mm 14mm 16mm 14mm; }
+    * { box-sizing: border-box; }
+    html, body { direction: rtl; }
+    body {
+      font-family: "Amud Hebrew", sans-serif;
+      color: #1c1915;
+      font-size: 11pt;
+      line-height: 1.45;
+      margin: 0;
+    }
+    h1 { font-size: 22pt; line-height: 1.2; margin: 0; font-weight: 700; }
+    .top { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; }
+    .biz-name { font-size: 14pt; font-weight: 700; margin-bottom: 2px; }
+    .muted { color: #5e564c; }
+    .kicker {
+      letter-spacing: 0.08em;
+      font-size: 9pt;
+      color: #0c5c4c;
+      font-weight: 700;
+    }
+    .doc-side { text-align: left; }
+    .rule { height: 3px; background: #0c5c4c; margin: 14px 0 16px; }
+    .meta { display: flex; justify-content: space-between; gap: 20px; margin-bottom: 16px; }
+    .label { color: #5e564c; font-size: 9pt; }
+    table.items { width: 100%; border-collapse: collapse; direction: rtl; }
+    table.items th {
+      background: #1c1915;
+      color: #f6f1e8;
+      font-weight: 700;
+      font-size: 10pt;
+    }
+    table.items th, table.items td {
+      text-align: right;
+      padding: 7px 8px;
+      vertical-align: top;
+      border-bottom: 1px solid #e4dccf;
+    }
+    table.items th:nth-child(1), table.items td:nth-child(1) { width: 46%; }
+    table.items th:nth-child(2), table.items td:nth-child(2) { width: 14%; }
+    table.items th:nth-child(3), table.items td:nth-child(3) { width: 20%; }
+    table.items th:nth-child(4), table.items td:nth-child(4) { width: 20%; }
+    table.sum { width: 100%; border-collapse: collapse; direction: rtl; margin-top: 12px; }
+    table.sum td { text-align: right; padding: 3px 8px; vertical-align: baseline; }
+    table.sum td.gap { width: 60%; padding: 0; }
+    table.sum td.lab { width: 20%; }
+    table.sum td.amt { width: 20%; white-space: nowrap; }
+    table.sum tr.grand td.lab, table.sum tr.grand td.amt { border-top: 2px solid #1c1915; font-weight: 700; font-size: 13pt; padding-top: 6px; }
+    .notes { margin-top: 18px; }
+    .foot {
+      margin-top: 28px;
+      font-size: 8.5pt;
+      color: #6d645b;
+    }
+  </style>
+</head>
+<body>
+  <div class="top">
+    <div>
+      <div class="biz-name">{{ business.name|mixed }}</div>
+      <div>{{ business.address|mixed }}</div>
+      <div>{{ business.company_number_label }} {{ business.company_number|ltr }}</div>
+      <div>{{ business.phone|ltr }}</div>
+    </div>
+    <div class="doc-side">
+      <div class="kicker">עמוד</div>
+      <h1>{{ title }}</h1>
+      <div>מס׳ {{ number_display|ltr }}</div>
+    </div>
+  </div>
+  <div class="rule"></div>
+  <div class="meta">
+    <div>
+      <div class="label">לכבוד</div>
+      <strong>{{ customer.name|mixed }}</strong>
+      {% if customer.address %}<div>{{ customer.address|mixed }}</div>{% endif %}
+      {% if customer.id_number %}<div>מזהה {{ customer.id_number|ltr }}</div>{% endif %}
+    </div>
+    <div>
+      <div>תאריך {{ issue_date_display|ltr }}</div>
+      {% if allocation_number %}
+        <div>מספר הקצאה {{ allocation_number|ltr }}</div>
+      {% endif %}
+    </div>
+  </div>
+  <table class="items">
+    <thead>
+      <tr>
+        <th>תיאור</th>
+        <th>כמות</th>
+        <th>מחיר יחידה</th>
+        <th>סכום</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for line in lines %}
+        <tr>
+          <td>{{ line.description|mixed }}</td>
+          <td>{{ line.quantity_display|ltr }}</td>
+          <td>{{ line.unit_price|nis }}</td>
+          <td>{{ line.amount|nis }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <table class="sum">
+    <tr>
+      <td class="gap"></td>
+      <td class="lab">לפני מע״מ</td>
+      <td class="amt">{{ totals.subtotal|nis }}</td>
+    </tr>
+    <tr>
+      <td class="gap"></td>
+      <td class="lab">מע״מ {{ totals.vat_percent|qty }}%</td>
+      <td class="amt">{{ totals.vat|nis }}</td>
+    </tr>
+    <tr class="grand">
+      <td class="gap"></td>
+      <td class="lab">סה״כ</td>
+      <td class="amt">{{ totals.total|nis }}</td>
+    </tr>
+  </table>
+  {% if notes %}
+    <div class="notes">
+      <div class="label">הערות</div>
+      <div>{{ notes|mixed }}</div>
+    </div>
+  {% endif %}
+  <div class="foot">
+    מסמך שהופק מקומית בעמוד. אינו משודר לרשות המסים, אינו מקצה מספר הקצאה, ואינו גובה תשלום.
+  </div>
+</body>
+</html>

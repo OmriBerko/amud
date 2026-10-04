@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}{{ doc.title }} {{ doc.number_display }} · עמוד{% endblock %}
+{% block body %}
+<section class="panel">
+  <header class="panel-head row">
+    <div>
+      <p class="kicker">{{ doc.title }}</p>
+      <h1>{{ doc.number_display|ltr }}</h1>
+      <p>{{ doc.customer.name|mixed }} · {{ doc.issue_date_display|ltr }}</p>
+    </div>
+    <div class="actions">
+      <a class="button" href="{{ url_for('main.document_pdf', doc_id=doc.id) }}">הורדת PDF</a>
+      <a class="button secondary" href="{{ url_for('main.documents') }}">לכל המסמכים</a>
+    </div>
+  </header>
+  {% if doc.allocation_number %}
+    <p>מספר הקצאה: {{ doc.allocation_number|ltr }}</p>
+  {% endif %}
+  <table class="data">
+    <thead>
+      <tr>
+        <th>תיאור</th>
+        <th>כמות</th>
+        <th>מחיר יחידה</th>
+        <th>סכום</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for line in doc.lines %}
+        <tr>
+          <td>{{ line.description|mixed }}</td>
+          <td>{{ line.quantity_display|ltr }}</td>
+          <td>{{ line.unit_price|nis }}</td>
+          <td>{{ line.amount|nis }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <dl class="totals">
+    <div><dt>לפני מע״מ</dt><dd>{{ doc.totals.subtotal|nis }}</dd></div>
+    <div><dt>מע״מ {{ doc.totals.vat_percent|qty }}%</dt><dd>{{ doc.totals.vat|nis }}</dd></div>
+    <div class="grand"><dt>סה״כ לתשלום</dt><dd>{{ doc.totals.total|nis }}</dd></div>
+  </dl>
+  {% if doc.notes %}
+    <p class="notes">{{ doc.notes|mixed }}</p>
+  {% endif %}
+</section>
+{% endblock %}

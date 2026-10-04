@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% block title %}מסמך חדש · עמוד{% endblock %}
+{% block body %}
+<section class="panel">
+  <header class="panel-head">
+    <h1>מסמך חדש</h1>
+    <p>תיאור הפריט יכול לערבב עברית ואנגלית, למשל התקנת WordPress אתר. המע״מ {{ vat_percent|ltr }}% יחושב בשמירה.</p>
+  </header>
+  <form method="post" class="stack" id="doc-form">
+    <div class="split">
+      <label>סוג
+        <select name="doc_type" id="doc-type">
+          {% for key, title in titles.items() %}
+            <option value="{{ key }}" {% if form.doc_type == key %}selected{% endif %}>{{ title }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>מספר שייקבע
+        <input id="next-number" readonly value="{{ '%04d'|format(next_numbers[form.doc_type]) }}" dir="ltr">
+      </label>
+    </div>
+    <label>לקוח
+      <select name="customer_id" required>
+        <option value="">בחירה</option>
+        {% for customer in customers %}
+          <option value="{{ customer.id }}" {% if form.customer_id|string == customer.id|string %}selected{% endif %}>{{ customer.name }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <div class="split">
+      <label>תאריך
+        <input type="date" name="issue_date" required value="{{ form.issue_date }}">
+      </label>
+      <label>מספר הקצאה (לא חובה)
+        <input name="allocation_number" value="{{ form.allocation_number }}" dir="ltr" autocomplete="off">
+      </label>
+    </div>
+
+    <div class="lines" id="lines">
+      {% for line in form.lines %}
+        <div class="line">
+          <label class="grow">תיאור
+            <input name="description" required value="{{ line.description }}">
+          </label>
+          <label>כמות
+            <input name="quantity" required inputmode="decimal" value="{{ line.quantity }}" dir="ltr">
+          </label>
+          <label>מחיר יחידה (₪)
+            <input name="unit_price" required inputmode="decimal" value="{{ line.unit_price }}" dir="ltr">
+          </label>
+          <button type="button" class="ghost remove-line" aria-label="הסרת שורה">הסרה</button>
+        </div>
+      {% endfor %}
+    </div>
+    <div class="actions">
+      <button type="button" class="secondary" id="add-line">הוספת שורה</button>
+    </div>
+    <label>הערות (לא חובה)
+      <textarea name="notes" rows="2">{{ form.notes }}</textarea>
+    </label>
+    <p class="hint" id="preview"></p>
+    <div class="actions">
+      <button type="submit">הפקת המסמך</button>
+      <a class="button secondary" href="{{ url_for('main.documents') }}">ביטול</a>
+    </div>
+  </form>
+</section>
+<template id="line-template">
+  <div class="line">
+    <label class="grow">תיאור
+      <input name="description" required value="">
+    </label>
+    <label>כמות
+      <input name="quantity" required inputmode="decimal" value="1" dir="ltr">
+    </label>
+    <label>מחיר יחידה (₪)
+      <input name="unit_price" required inputmode="decimal" value="" dir="ltr">
+    </label>
+    <button type="button" class="ghost remove-line" aria-label="הסרת שורה">הסרה</button>
+  </div>
+</template>
+<script>
+(function () {
+  const next = {{ next_numbers|tojson }};
+  const typeSelect = document.getElementById("doc-type");
+  const nextInput = document.getElementById("next-number");
+  const lines = document.getElementById("lines");
+  const preview = document.getElementById("preview");
+  const vat = Number("{{ vat_percent }}");
+
+  function pad(n) {
+    return String(n).padStart(4, "0");
+  }
+  typeSelect.addEventListener("change", function () {
+    nextInput.value = pad(next[typeSelect.value] || 1);
+  });
+
+  function bind(row) {
+    row.querySelector(".remove-line").addEventListener("click", function () {
+      if (lines.querySelectorAll(".line").length === 1) return;
+      row.remove();
+      recalc();
+    });
+    row.querySelectorAll("input").forEach(function (input) {
+      input.addEventListener("input", recalc);
+    });
+  }
+  document.getElementById("add-line").addEventListener("click", function () {
+    const node = document.getElementById("line-template").content.cloneNode(true);
+    lines.appendChild(node);
+    bind(lines.lastElementChild);
+    recalc();
+  });
+  lines.querySelectorAll(".line").forEach(bind);
+
+  function num(value) {
+    const text = String(value || "").trim().replace(/₪/g, "").replace(/\s/g, "");
+    if (!text) return 0;
+    const normalized = (text.split(",").length === 2 && text.indexOf(".") === -1)
+      ? text.replace(",", ".")
+      : text.replace(/,/g, "");
+    const parsed = Number(normalized);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+  function nis(amount) {
+    const sign = amount < 0 ? "-" : "";
+    const fixed = Math.abs(amount).toFixed(2);
+    const parts = fixed.split(".");
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    return sign + "₪" + parts.join(".");
+  }
+  function recalc() {
+    let sub = 0;
+    lines.querySelectorAll(".line").forEach(function (row) {
+      const q = num(row.querySelector("[name=quantity]").value);
+      const p = num(row.querySelector("[name=unit_price]").value);
+      sub += Math.round(q * p * 100) / 100;
+    });
+    sub = Math.round(sub * 100) / 100;
+    const tax = Math.round(sub * vat) / 100;
+    const total = Math.round((sub + tax) * 100) / 100;
+    preview.textContent = "לפני מע״מ " + nis(sub) + " · מע״מ " + nis(tax) + " · סה״כ " + nis(total) + " (תצוגה מקדימה)";
+  }
+  recalc();
+})();
+</script>
+{% endblock %}

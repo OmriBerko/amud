@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}פרטי העסק · עמוד{% endblock %}
+{% block body %}
+<section class="panel">
+  <header class="panel-head">
+    <h1>פרטי העסק</h1>
+    <p>נשמרים פעם אחת במחשב הזה, ומופיעים בכל הצעת מחיר ובכל חשבונית מס.</p>
+  </header>
+  <form method="post" class="stack">
+    <label>שם העסק
+      <input name="business_name" required value="{{ settings.business_name if settings else '' }}">
+    </label>
+    <label>כתובת
+      <textarea name="address" rows="2" required>{{ settings.address if settings else '' }}</textarea>
+    </label>
+    <div class="split">
+      <label>סוג מספר
+        <select name="company_number_label">
+          {% for label in labels %}
+            <option value="{{ label }}" {% if settings and settings.company_number_label == label %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>מספר ח.פ. או ע.מ.
+        <input name="company_number" required inputmode="numeric" value="{{ settings.company_number if settings else '' }}">
+      </label>
+    </div>
+    <label>טלפון
+      <input name="phone" required value="{{ settings.phone if settings else '' }}" dir="ltr">
+    </label>
+    <div class="actions">
+      <button type="submit">שמירת פרטי העסק</button>
+    </div>
+  </form>
+</section>
+{% endblock %}

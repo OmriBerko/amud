@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}מסמכים · עמוד{% endblock %}
+{% block body %}
+<section class="panel">
+  <header class="panel-head row">
+    <div>
+      <h1>מסמכים</h1>
+      <p>הצעת מחיר או חשבונית מס. המע״מ {{ "18"|ltr }}% מחושב בנפרד. המספור רץ בנפרד לכל סוג.</p>
+    </div>
+    <div class="actions">
+      <a class="button" href="{{ url_for('main.new_document', doc_type='quote') }}">הצעת מחיר</a>
+      <a class="button secondary" href="{{ url_for('main.new_document', doc_type='tax_invoice') }}">חשבונית מס</a>
+    </div>
+  </header>
+  {% if not has_settings %}
+    <p class="callout">פרטי העסק עדיין לא נשמרו. <a href="{{ url_for('main.settings') }}">הגדרה</a></p>
+  {% endif %}
+  {% if documents %}
+    <table class="data">
+      <thead>
+        <tr>
+          <th>מסמך</th>
+          <th>מספר</th>
+          <th>תאריך</th>
+          <th>לקוח</th>
+          <th>סה״כ</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for doc in documents %}
+          <tr>
+            <td>{{ doc.title }}</td>
+            <td>{{ doc.number_display|ltr }}</td>
+            <td>{{ doc.issue_date_display|ltr }}</td>
+            <td>{{ doc.customer.name|mixed }}</td>
+            <td>{{ doc.totals.total|nis }}</td>
+            <td class="actions tight">
+              <a href="{{ url_for('main.document_detail', doc_id=doc.id) }}">צפייה</a>
+              <a href="{{ url_for('main.document_pdf', doc_id=doc.id) }}">PDF</a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p class="empty">עדיין אין מסמכים.</p>
+  {% endif %}
+</section>
+{% endblock %}

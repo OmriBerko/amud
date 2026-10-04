@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}לקוחות · עמוד{% endblock %}
+{% block body %}
+<section class="panel">
+  <header class="panel-head">
+    <h1>לקוחות</h1>
+    <p>שם, כתובת ומספר מזהה. הנתונים נשארים בקובץ המקומי.</p>
+  </header>
+  <form method="post" class="stack">
+    <label>שם הלקוח
+      <input name="name" required>
+    </label>
+    <label>כתובת
+      <textarea name="address" rows="2"></textarea>
+    </label>
+    <label>מספר מזהה (ת.ז. או ח.פ.)
+      <input name="id_number" dir="ltr">
+    </label>
+    <div class="actions">
+      <button type="submit">הוספת לקוח</button>
+    </div>
+  </form>
+</section>
+<section class="panel">
+  {% if customers %}
+    <table class="data">
+      <thead>
+        <tr>
+          <th>שם</th>
+          <th>כתובת</th>
+          <th>מזהה</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for customer in customers %}
+          <tr>
+            <td>{{ customer.name|mixed }}</td>
+            <td>{{ customer.address|mixed }}</td>
+            <td>{{ customer.id_number|ltr }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p class="empty">עדיין אין לקוחות.</p>
+  {% endif %}
+</section>
+{% endblock %}
